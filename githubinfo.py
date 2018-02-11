@@ -54,13 +54,10 @@ class GitHubIntegration:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--verbosity", action="store_true", default=False, help="increase output verbosity")
     parser.add_argument("--dump_old_prs", action="store_true", default=False, help="dump old PR")
     parser.add_argument("--dump_old_branches", action="store_true", default=False, help="dump old Branches")
     parser.add_argument("organization", help="github organization")
     args = parser.parse_args()
-    if args.verbosity:
-        print("verbosity turned on")
 
     github_client = GitHubIntegration(os.environ['GITHUB_OAUTH_TOKEN'])
     for repo in github_client.get_repositories(args.organization):
