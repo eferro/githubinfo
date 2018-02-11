@@ -24,4 +24,13 @@ python githubinfo.py --dump_old_prs --dump_old_branches <github-organization>
 # Help #
 ```
 python githubinfo.py -h
+usage: githubinfo.py [-h] [--dump_old_prs] [--dump_old_branches] organization
+
+positional arguments:
+  organization         github organization
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --dump_old_prs       dump old PR
+  --dump_old_branches  dump old Branches
 ```
