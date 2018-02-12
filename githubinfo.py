@@ -54,6 +54,7 @@ class GitHubIntegration:
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--reference", action="store", default="master", help="name of the main branch/trunk")
     parser.add_argument("--dump_old_prs", action="store_true", default=False, help="dump old PR")
     parser.add_argument("--dump_old_branches", action="store_true", default=False, help="dump old Branches")
     parser.add_argument("organization", help="github organization")
@@ -83,11 +84,17 @@ def main():
         if args.dump_old_branches:
             print("Old branches")
             for branch in sorted(branches, key=lambda b: parse(b.commit.commit.last_modified)):
+                diff = repo.compare(branch.name, args.reference)
+                branch_delta = diff.behind_by + diff.ahead_by
+                last_sync_date = diff.merge_base_commit.commit.committer.date
+                days_since_last_sync = (datetime.now() - last_sync_date).days
                 last_modification = parse(branch.commit.commit.last_modified)
                 last_commit_age = (datetime.now(timezone.utc) - last_modification).days
                 if  last_commit_age > DAYS_TO_COSIDER_OLD_A_BRANCH:
                     print("\t", last_commit_age, "days", branch.name,
-                          "last commit author:", branch.commit.commit.author.name)
+                          days_since_last_sync, "days (last sync)",
+                          branch_delta, "commits delta",
+                          "({})".format(branch.commit.commit.author.name))
         print()
 
 
