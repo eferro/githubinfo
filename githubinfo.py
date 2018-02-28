@@ -66,8 +66,7 @@ def main():
         branches = github_client.get_all_branches(repo)
         pull_requests = github_client.get_pullrequests_info(repo)
         durations = sorted([pr.duration for pr in pull_requests])
-        sizes = sorted([pr.size for pr in pull_requests])
-
+        
         if durations:
             old_prs_message = "Older PR {} days".format(max(durations))
         else:
