@@ -9,8 +9,8 @@ PullRequestInfo = namedtuple('PullRequestInfo',
     ['id','html_url','state', 'size', 'duration', 'created_at', 'closed_at'])
 
 
-DAYS_TO_COSIDER_OLD_A_PR = 8
-DAYS_TO_COSIDER_OLD_A_BRANCH = 8
+DAYS_TO_COSIDER_OLD_A_PR = 4
+DAYS_TO_COSIDER_OLD_A_BRANCH = 4
 
 
 class GitHubIntegration:
