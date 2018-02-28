@@ -78,7 +78,7 @@ def main():
             print("Old PRs")
             for pr in sorted(pull_requests, key=lambda x: x.duration, reverse=True):
                 if pr.duration >= DAYS_TO_COSIDER_OLD_A_PR:
-                    print("\t", pr.duration, "days", pr.html_url)
+                    print("\t", pr.duration, "days", pr.html_url, "size", pr.size)
 
         if args.dump_old_branches:
             print("Old branches")
