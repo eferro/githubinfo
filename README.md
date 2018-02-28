@@ -24,17 +24,25 @@ python githubinfo.py --dump_old_prs --dump_old_branches <github-organization>
 # Help #
 ```
 python githubinfo.py -h
-usage: githubinfo.py [-h]
-		     [--reference REFERENCE] [--dump_old_prs] [--dump_old_branches]
-		     organization
+
+usage: githubinfo.py [-h] [--reference REFERENCE] [--dump_old_prs]
+                     [--dump_old_branches] [--days_old_prs DAYS_OLD_PRS]
+                     [--days_old_branches DAYS_OLD_BRANCHES]
+                     organization
 
 positional arguments:
   organization          github organization
 
 optional arguments:
   -h, --help            show this help message and exit
-  --reference REFERENCE name of the main branch/trunk (default master)
+  --reference REFERENCE
+                        name of the main branch/trunk
   --dump_old_prs        dump old PR
   --dump_old_branches   dump old Branches
+  --days_old_prs DAYS_OLD_PRS
+                        days to consider a PR as old (default 4)
+  --days_old_branches DAYS_OLD_BRANCHES
+                        days to consider a branch as too long (default 4)
+
 ```
 

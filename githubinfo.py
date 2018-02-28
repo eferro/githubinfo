@@ -57,6 +57,10 @@ def main():
     parser.add_argument("--reference", action="store", default="master", help="name of the main branch/trunk")
     parser.add_argument("--dump_old_prs", action="store_true", default=False, help="dump old PR")
     parser.add_argument("--dump_old_branches", action="store_true", default=False, help="dump old Branches")
+    parser.add_argument("--days_old_prs", action="store", default=DAYS_TO_COSIDER_OLD_A_PR, type=int,
+                        help="days to consider a PR as old (default {})".format(DAYS_TO_COSIDER_OLD_A_PR))
+    parser.add_argument("--days_old_branches", action="store", default=DAYS_TO_COSIDER_OLD_A_BRANCH, type=int,
+                        help="days to consider a branch as too long (default {})".format(DAYS_TO_COSIDER_OLD_A_BRANCH))
     parser.add_argument("organization", help="github organization")
     args = parser.parse_args()
 
@@ -77,7 +81,7 @@ def main():
         if args.dump_old_prs:
             print("Old PRs")
             for pr in sorted(pull_requests, key=lambda x: x.duration, reverse=True):
-                if pr.duration >= DAYS_TO_COSIDER_OLD_A_PR:
+                if pr.duration >= args.days_old_prs:
                     print("\t", pr.duration, "days", pr.html_url, "size", pr.size)
 
         if args.dump_old_branches:
@@ -89,7 +93,7 @@ def main():
                 days_since_last_sync = (datetime.now() - last_sync_date).days
                 last_modification = parse(branch.commit.commit.last_modified)
                 last_commit_age = (datetime.now(timezone.utc) - last_modification).days
-                if  last_commit_age > DAYS_TO_COSIDER_OLD_A_BRANCH:
+                if  last_commit_age >= args.days_old_branches:
                     print("\t", last_commit_age, "days", branch.name,
                           days_since_last_sync, "days (last sync)",
                           branch_delta, "commits delta",
