@@ -52,6 +52,45 @@ class GitHubIntegration:
             return Github(self.username, self.password)
 
 
+Branch = namedtuple('Branch', ['organization',
+                                'repo',
+                                'name',
+                                'link',
+                                'commits_delta',
+                                'last_commit_author',
+                                'last_commit_age'])
+
+class GithubRepoBranches:
+    def __init__(self, github_client, github_repo, organization, reference):
+        self._github_client = github_client
+        self._github_repo = github_repo
+        self._reference = reference
+        self._organization = organization
+        self._branches = []
+
+    def initialize(self):
+        for b in self._github_client.get_all_branches(self._github_repo):
+            branch_link = "https://github.com/{}/{}/tree/{}".format(self._organization,
+                                                                    self._github_repo.name,
+                                                                    b.name)
+            diff = self._github_repo.compare(b.name, self._reference)
+            branch_delta = diff.behind_by + diff.ahead_by
+            last_sync_date = diff.merge_base_commit.commit.committer.date
+            days_since_last_sync = (datetime.now() - last_sync_date).days
+            last_modification = parse(b.commit.commit.last_modified)
+            last_commit_age = (datetime.now(timezone.utc) - last_modification).days
+            self._branches.append(Branch(self._organization,
+                                         self._github_repo.name,
+                                         b.name,
+                                         branch_link,
+                                         branch_delta,
+                                         b.commit.commit.author.name,
+                                         last_commit_age))
+
+    def branches(self):
+        return self._branches
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--reference", action="store", default="master", help="name of the main branch/trunk")
@@ -64,10 +103,13 @@ def main():
     parser.add_argument("organization", help="github organization")
     args = parser.parse_args()
 
+    organization=args.organization
     github_client = GitHubIntegration(os.environ['GITHUB_OAUTH_TOKEN'])
-    for repo in github_client.get_repositories(args.organization):
+    for repo in github_client.get_repositories(organization):
 
-        branches = github_client.get_all_branches(repo)
+        github_branches = GithubRepoBranches(github_client, repo, organization, args.reference)
+        github_branches.initialize()
+        branches = github_branches.branches()
         pull_requests = github_client.get_pullrequests_info(repo)
         durations = sorted([pr.duration for pr in pull_requests])
         
@@ -86,18 +128,12 @@ def main():
 
         if args.dump_old_branches:
             print("Old branches")
-            for branch in sorted(branches, key=lambda b: parse(b.commit.commit.last_modified)):
-                diff = repo.compare(branch.name, args.reference)
-                branch_delta = diff.behind_by + diff.ahead_by
-                last_sync_date = diff.merge_base_commit.commit.committer.date
-                days_since_last_sync = (datetime.now() - last_sync_date).days
-                last_modification = parse(branch.commit.commit.last_modified)
-                last_commit_age = (datetime.now(timezone.utc) - last_modification).days
-                if  last_commit_age >= args.days_old_branches:
-                    print("\t", last_commit_age, "days", branch.name,
-                          days_since_last_sync, "days (last sync)",
-                          branch_delta, "commits delta",
-                          "({})".format(branch.commit.commit.author.name))
+            for b in sorted(branches, key=lambda b: b.last_commit_age):
+                if  b.last_commit_age >= args.days_old_branches:
+                    print("\t", b.last_commit_age, "days", b.link,
+                          b.last_commit_age, "days (last sync)",
+                          b.commits_delta, "commits delta",
+                          "({})".format(b.last_commit_author))
         print()
 
 
