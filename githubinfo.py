@@ -128,7 +128,7 @@ def main():
 
         if args.dump_old_branches:
             print("Old branches")
-            for b in sorted(branches, key=lambda b: b.last_commit_age):
+            for b in sorted(branches, key=lambda b: b.last_commit_age, reverse=True):
                 if  b.last_commit_age >= args.days_old_branches:
                     print("\t", b.last_commit_age, "days", b.link,
                           b.last_commit_age, "days (last sync)",
