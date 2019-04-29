@@ -19,10 +19,18 @@ class GitHubIntegration:
         self.password = password
         self.oauth_token = oauth_token
 
-    def get_repositories(self, organization_name):
+    def get_repositories(self, organization_name, included_repos=None, excluded_repos=None):
+        included_repos = included_repos if included_repos else []
+        excluded_repos = excluded_repos if excluded_repos else []
+
         client = self._get_client()
         organization = client.get_organization(organization_name)
-        return organization.get_repos()
+        repos = organization.get_repos()
+        if included_repos:
+            repos = [r for r in repos if r.name in included_repos]
+        if excluded_repos:
+            repos = [r for r in repos if r.name not in excluded_repos]
+        return repos
 
     def get_all_branches(self, repo):
         return [b for b in repo.get_branches()]
@@ -100,13 +108,19 @@ def main():
                         help="days to consider a PR as old (default {})".format(DAYS_TO_COSIDER_OLD_A_PR))
     parser.add_argument("--days_old_branches", action="store", default=DAYS_TO_COSIDER_OLD_A_BRANCH, type=int,
                         help="days to consider a branch as too long (default {})".format(DAYS_TO_COSIDER_OLD_A_BRANCH))
+    parser.add_argument('-r', '--repo_list', help='delimited list of repos to process (default all repos)', type=str)
+    parser.add_argument('-x', '--exclude_repo_list', help='delimited list of repos to exclude', type=str)
     parser.add_argument("organization", help="github organization")
     args = parser.parse_args()
 
     organization=args.organization
     github_client = GitHubIntegration(os.environ['GITHUB_OAUTH_TOKEN'])
-    for repo in github_client.get_repositories(organization):
 
+    repos_to_process = args.repo_list.split(',') if args.repo_list else None
+    repos_to_exclude = args.exclude_repo_list.split(',') if args.exclude_repo_list else None
+    org_repos_to_process = github_client.get_repositories(organization, repos_to_process, repos_to_exclude)
+
+    for repo in org_repos_to_process:
         github_branches = GithubRepoBranches(github_client, repo, organization, args.reference)
         github_branches.initialize()
         branches = github_branches.branches()
